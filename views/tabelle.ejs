@@ -17,10 +17,10 @@
         <th class="num">#</th>
         <th>Name</th>
         <th class="num">Pkt.</th>
-        <th class="num" title="Bonuspunkte">⭐</th>
         <th class="num" title="Exakte Ergebnisse">🎯</th>
         <th class="num" title="Richtige Tordifferenz">↔</th>
         <th class="num" title="Richtige Tendenz">↗</th>
+        <th class="num" title="Bonuspunkte">⭐</th>
         <th class="num" title="Abgegebene Tipps">Tipps</th>
       </tr>
     </thead>
@@ -30,10 +30,10 @@
           <td class="num"><%= i + 1 %></td>
           <td><%= r.username %></td>
           <td class="num total"><%= r.total %></td>
-          <td class="num"><%= r.bonus %></td>
           <td class="num"><%= r.c4 %></td>
           <td class="num"><%= r.c3 %></td>
           <td class="num"><%= r.c2 %></td>
+          <td class="num"><%= r.bonus %></td>
           <td class="num muted"><%= r.tips %></td>
         </tr>
       <% }) %>
@@ -90,10 +90,10 @@
   <h3>Spalten</h3>
   <ul>
     <li><b class="licon">Pkt.</b> Gesamtpunkte (Spieltipps + Bonus)</li>
-    <li><b class="licon">⭐</b> Bonuspunkte aus den Bonustipps</li>
     <li><b class="licon">🎯</b> Anzahl exakt getippter Ergebnisse</li>
     <li><b class="licon">↔</b> Anzahl richtiger Tordifferenzen</li>
     <li><b class="licon">↗</b> Anzahl richtiger Tendenzen</li>
+    <li><b class="licon">⭐</b> Bonuspunkte aus den Bonustipps</li>
     <li><b class="licon">Tipps</b> Anzahl abgegebener Tipps</li>
   </ul>
   <p class="muted small">🎯, ↔ und ↗ zählen, wie oft – die Punkte daraus stecken schon in „Pkt.“. Bei Punktgleichheit entscheidet die Anzahl exakter Treffer (🎯), danach die richtigen Tordifferenzen (↔).</p>
