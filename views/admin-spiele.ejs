@@ -1,0 +1,53 @@
+<%- include('partials/head') %>
+
+<header class="top">
+  <div class="toprow">
+    <a class="back" href="/admin">← Admin</a>
+    <h1 class="logo">Spiele verwalten</h1>
+  </div>
+</header>
+
+<% if (ok) { %><div class="banner okay"><%= ok %></div><% } %>
+<% if (err) { %><div class="banner err"><%= err %></div><% } %>
+
+<div class="banner info">
+  Das normale Ergebnis-Feld ist das <b>90-Minuten-Ergebnis</b> – nur das zählt für die Punkte.
+  Haken bei „Live“ = Zwischenstand (Spiel läuft noch). Bei K.o.-Spielen mit Verlängerung/Elfmeterschießen
+  zusätzlich den Endstand und eine Notiz (z.&nbsp;B. „n.V.“ oder „5:4 i.E.“) eintragen –
+  der Sync fasst abgeschlossene K.o.-Spiele nicht mehr an.
+  Team-Namen am besten auf Englisch wie im Feed („Germany“), dann stimmen Übersetzung und Flagge.
+</div>
+
+<% rounds.forEach(r => { %>
+  <h2 class="datehead"><%= r.label %></h2>
+  <% r.matches.forEach(m => { %>
+    <form method="post" action="/admin/spiele/<%= m.id %>" class="card mrow" id="m<%= m.id %>">
+      <div class="mrow-meta muted small">
+        #<%= m.id %> · <%= m.dayShort %> · <%= m.time %> Uhr · <%= m.venue %>
+        <% if (m.status === 'live') { %> · <span class="livechip">● LIVE</span><% } else if (m.locked) { %> · 🔒 angepfiffen<% } %>
+      </div>
+      <div class="mrow-fields">
+        <input class="text tteam" type="text" name="home_team" value="<%= m.home_team %>" required>
+        <input class="gin" type="number" name="hs" min="0" max="99" inputmode="numeric" value="<%= m.home_score ?? '' %>">
+        <span class="vs">:</span>
+        <input class="gin" type="number" name="as" min="0" max="99" inputmode="numeric" value="<%= m.away_score ?? '' %>">
+        <input class="text tteam" type="text" name="away_team" value="<%= m.away_team %>" required>
+      </div>
+      <% if (m.round >= 4) { %>
+        <div class="mrow-fields finals">
+          <span class="small muted">Endstand n. Verl./Elfm.:</span>
+          <input class="gin" type="number" name="hf" min="0" max="99" inputmode="numeric" value="<%= m.home_final ?? '' %>">
+          <span class="vs">:</span>
+          <input class="gin" type="number" name="af" min="0" max="99" inputmode="numeric" value="<%= m.away_final ?? '' %>">
+          <input class="text tnote" type="text" name="note" maxlength="40" placeholder="z. B. n.V. / 5:4 i.E." value="<%= m.result_note ?? '' %>">
+        </div>
+      <% } %>
+      <div class="mrow-fields">
+        <label class="check small"><input type="checkbox" name="live" value="1" <%= m.status === 'live' ? 'checked' : '' %>> Live (Zwischenstand, Spiel läuft)</label>
+        <button class="btn small" type="submit">Speichern</button>
+      </div>
+    </form>
+  <% }) %>
+<% }) %>
+
+<%- include('partials/foot') %>

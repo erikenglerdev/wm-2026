@@ -1,0 +1,136 @@
+<%- include('partials/head') %>
+
+<header class="top">
+  <div class="toprow">
+    <h1 class="logo">⚽ WM 2026</h1>
+    <% if (me) { %>
+      <a class="mystats" href="/tabelle">Platz <%= rank %> · <%= me.total %> Pkt.</a>
+    <% } %>
+  </div>
+  <div class="chips" role="tablist">
+    <button class="chip" data-filter="offen">Offen</button>
+    <button class="chip" data-filter="heute">Heute</button>
+    <button class="chip" data-filter="morgen">Morgen</button>
+    <button class="chip" data-filter="ungetippt">Nicht getippt</button>
+    <button class="chip" data-filter="beendet">Gespielt</button>
+    <button class="chip" data-filter="alle">Alle</button>
+  </div>
+</header>
+
+<details class="card bonus" <%- (!bonusLocked && (!bonus || !bonus.champion || !bonus.germany_round)) ? 'open' : '' %>>
+  <summary>⭐ Bonustipps <span class="muted small">(je <%= BONUS_POINTS %> Punkte)</span></summary>
+  <% if (!bonusLocked) { %>
+    <div class="stack">
+      <label class="blabel" for="bonus-champion">Wer wird Weltmeister?</label>
+      <select class="text" id="bonus-champion">
+        <option value="">– noch kein Tipp –</option>
+        <% teamOptions.forEach(t => { %>
+          <option value="<%= t.value %>" <%= bonus && bonus.champion === t.value ? 'selected' : '' %>><%= teamFlag(t.value) %> <%= t.label %></option>
+        <% }) %>
+      </select>
+      <label class="blabel" for="bonus-germany">Bis zu welcher Runde kommt 🇩🇪 Deutschland?</label>
+      <select class="text" id="bonus-germany">
+        <option value="">– noch kein Tipp –</option>
+        <% roundOptions.forEach(r => { %>
+          <option value="<%= r.value %>" <%= bonus && bonus.germany_round === r.value ? 'selected' : '' %>><%= r.label %></option>
+        <% }) %>
+      </select>
+      <div class="small muted">
+        <span id="bonus-state"></span>
+        Änderbar bis zum Eröffnungsspiel (<%= firstKickoffStr %>).
+      </div>
+    </div>
+  <% } else { %>
+    <div class="bonus-locked">
+      <p>
+        Weltmeister:
+        <b><%= bonus && bonus.champion ? `${teamFlag(bonus.champion)} ${teamName(bonus.champion)}` : 'kein Tipp' %></b>
+        <% if (bonusResults.champion && bonus && bonus.champion) { %>
+          <% if (bonus.champion === bonusResults.champion) { %><span class="badge p4">+<%= BONUS_POINTS %></span><% } else { %><span class="badge p0">+0</span><% } %>
+        <% } %>
+      </p>
+      <p>
+        Deutschland bis:
+        <b><%= bonus && bonus.germany_round ? BONUS_ROUNDS_SHORT[bonus.germany_round] : 'kein Tipp' %></b>
+        <% if (bonusResults.germanyRound && bonus && bonus.germany_round) { %>
+          <% if (bonus.germany_round === bonusResults.germanyRound) { %><span class="badge p4">+<%= BONUS_POINTS %></span><% } else { %><span class="badge p0">+0</span><% } %>
+        <% } %>
+      </p>
+      <p class="muted small">Die Bonustipps aller Mitspieler stehen unter „Tabelle“.</p>
+    </div>
+  <% } %>
+</details>
+
+<% if (me) { %>
+  <p class="tipcount muted small"><%= me.tips %> von <%= totalMatches %> Spielen getippt</p>
+<% } %>
+
+<% groups.forEach(g => { %>
+  <h2 class="datehead"><%= g.label %></h2>
+  <% g.matches.forEach(m => { %>
+    <article class="match"
+             data-id="<%= m.id %>"
+             data-state="<%= m.hasResult && !m.live ? 'finished' : (m.locked ? 'locked' : 'open') %>"
+             data-today="<%= m.today ? 1 : 0 %>"
+             data-tomorrow="<%= m.tomorrow ? 1 : 0 %>"
+             data-tipped="<%= m.tip ? 1 : 0 %>">
+      <div class="mhead">
+        <span><%= m.stage %></span>
+        <span>
+          <% if (m.live) { %><span class="livechip">● LIVE</span><% } %>
+          <%= m.time %> Uhr
+        </span>
+      </div>
+      <div class="mbody">
+        <div class="trow">
+          <span class="flag"><%= m.home.flag || '·' %></span>
+          <span class="tname <%= m.home.tbd ? 'tbd' : '' %>"><%= m.home.name %></span>
+          <% if (m.locked) { %>
+            <span class="gres <%= m.live ? 'islive' : '' %>"><%= m.hasResult ? (m.final ? m.final.h : m.hs) : '–' %></span>
+          <% } else { %>
+            <input class="gin" type="number" min="0" max="99" inputmode="numeric"
+                   data-match="<%= m.id %>" data-side="h"
+                   value="<%= m.tip ? m.tip.home_goals : '' %>" aria-label="Tore <%= m.home.name %>">
+          <% } %>
+        </div>
+        <div class="trow">
+          <span class="flag"><%= m.away.flag || '·' %></span>
+          <span class="tname <%= m.away.tbd ? 'tbd' : '' %>"><%= m.away.name %></span>
+          <% if (m.locked) { %>
+            <span class="gres <%= m.live ? 'islive' : '' %>"><%= m.hasResult ? (m.final ? m.final.a : m.as) : '–' %></span>
+          <% } else { %>
+            <input class="gin" type="number" min="0" max="99" inputmode="numeric"
+                   data-match="<%= m.id %>" data-side="a"
+                   value="<%= m.tip ? m.tip.away_goals : '' %>" aria-label="Tore <%= m.away.name %>">
+          <% } %>
+        </div>
+      </div>
+      <% if (m.final) { %>
+        <div class="sub90 muted small">Nach 90 Min.: <%= m.hs %>:<%= m.as %><%= m.note ? ' · ' + m.note : '' %> – gewertet wird das 90-Minuten-Ergebnis</div>
+      <% } else if (m.note) { %>
+        <div class="sub90 muted small"><%= m.note %></div>
+      <% } %>
+      <div class="mfoot">
+        <% if (m.locked) { %>
+          <span>
+            <% if (m.tip) { %>
+              Dein Tipp <%= m.tip.home_goals %>:<%= m.tip.away_goals %>
+              <% if (m.pts != null) { %><span class="badge p<%= m.pts %>">+<%= m.pts %></span><% } %>
+            <% } else { %>
+              Kein Tipp abgegeben
+            <% } %>
+            <% if (m.live) { %> · Zwischenstand<% } else if (!m.hasResult) { %> · wartet auf Ergebnis<% } %>
+          </span>
+          <a class="alltips" href="/spiel/<%= m.id %>">Alle Tipps →</a>
+        <% } else { %>
+          <span class="savestate" data-match="<%= m.id %>"><%= m.tip ? '✓ Tipp gespeichert' : 'Noch kein Tipp' %></span>
+          <span class="muted">bis Anpfiff änderbar</span>
+        <% } %>
+      </div>
+    </article>
+  <% }) %>
+<% }) %>
+
+<p class="muted small filter-empty" hidden>Keine Spiele in dieser Ansicht. 🎉</p>
+
+<%- include('partials/foot') %>

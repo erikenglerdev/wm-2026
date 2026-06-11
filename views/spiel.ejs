@@ -1,0 +1,58 @@
+<%- include('partials/head') %>
+
+<header class="top">
+  <div class="toprow">
+    <a class="back" href="/">← Zurück</a>
+  </div>
+</header>
+
+<article class="match detail">
+  <div class="mhead">
+    <span><%= m.stage %></span>
+    <span><%= m.dayShort %> · <%= m.time %> Uhr</span>
+  </div>
+  <div class="mbody">
+    <div class="trow">
+      <span class="flag"><%= m.home.flag || '·' %></span>
+      <span class="tname <%= m.home.tbd ? 'tbd' : '' %>"><%= m.home.name %></span>
+      <span class="gres <%= m.live ? 'islive' : '' %>"><%= m.hasResult ? (m.final ? m.final.h : m.hs) : '–' %></span>
+    </div>
+    <div class="trow">
+      <span class="flag"><%= m.away.flag || '·' %></span>
+      <span class="tname <%= m.away.tbd ? 'tbd' : '' %>"><%= m.away.name %></span>
+      <span class="gres <%= m.live ? 'islive' : '' %>"><%= m.hasResult ? (m.final ? m.final.a : m.as) : '–' %></span>
+    </div>
+  </div>
+  <% if (m.final) { %>
+    <div class="sub90 muted small">Nach 90 Min.: <%= m.hs %>:<%= m.as %><%= m.note ? ' · ' + m.note : '' %> – gewertet wird das 90-Minuten-Ergebnis</div>
+  <% } else if (m.note) { %>
+    <div class="sub90 muted small"><%= m.note %></div>
+  <% } %>
+  <div class="mfoot">
+    <span><%= m.venue %></span>
+    <% if (m.live) { %><span class="livechip">● LIVE</span><% } else if (m.locked && !m.hasResult) { %><span>wartet auf Ergebnis</span><% } %>
+  </div>
+</article>
+
+<% if (!m.locked) { %>
+  <div class="banner info">Die Tipps der anderen sind bis zum Anpfiff verborgen. 🤫</div>
+<% } else if (tips.length === 0) { %>
+  <div class="banner info">Niemand hat dieses Spiel getippt.</div>
+<% } else { %>
+  <h2 class="datehead">Alle Tipps</h2>
+  <div class="card">
+    <table class="tips-table">
+      <% tips.forEach(t => { %>
+        <tr class="<%= t.mine ? 'me' : '' %>">
+          <td><%= t.username %><%= t.mine ? ' (du)' : '' %></td>
+          <td class="num"><%= t.h %>:<%= t.a %></td>
+          <td class="num">
+            <% if (t.pts != null) { %><span class="badge p<%= t.pts %>">+<%= t.pts %></span><% } else { %><span class="muted">–</span><% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </table>
+  </div>
+<% } %>
+
+<%- include('partials/foot') %>

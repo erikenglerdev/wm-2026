@@ -1,0 +1,78 @@
+<%- include('partials/head') %>
+
+<header class="top">
+  <div class="toprow">
+    <h1 class="logo">⚙️ Admin</h1>
+  </div>
+</header>
+
+<% if (ok) { %><div class="banner okay"><%= ok %></div><% } %>
+<% if (err) { %><div class="banner err"><%= err %></div><% } %>
+
+<div class="card">
+  <h3>Spielplan &amp; Ergebnisse</h3>
+  <p class="muted small">Sync holt Team-Namen der K.o.-Runde, Anstoßzeiten und Ergebnisse automatisch aus dem Internet.<br>Quelle: <%= feedUrl %></p>
+  <div class="btnrow">
+    <form method="post" action="/admin/sync">
+      <button class="btn" type="submit">🔄 Jetzt synchronisieren</button>
+    </form>
+    <a class="btn sec" href="/admin/spiele">Spiele manuell bearbeiten</a>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Bonustipps auswerten</h3>
+  <form method="post" action="/admin/bonus" class="stack">
+    <label class="blabel" for="admin-champion">Weltmeister</label>
+    <select class="text" id="admin-champion" name="champion">
+      <option value="">– noch offen –</option>
+      <% teamOptions.forEach(t => { %>
+        <option value="<%= t.value %>" <%= bonusResults.champion === t.value ? 'selected' : '' %>><%= teamFlag(t.value) %> <%= t.label %></option>
+      <% }) %>
+    </select>
+    <label class="blabel" for="admin-germany">Deutschland kam bis</label>
+    <select class="text" id="admin-germany" name="germany_round">
+      <option value="">– noch offen –</option>
+      <% roundOptions.forEach(r => { %>
+        <option value="<%= r.value %>" <%= bonusResults.germanyRound === r.value ? 'selected' : '' %>><%= r.label %></option>
+      <% }) %>
+    </select>
+    <button class="btn" type="submit">Auswertung speichern</button>
+  </form>
+  <p class="muted small">Sobald gesetzt, bekommen alle Mitspieler mit richtigem Bonustipp je <%= BONUS_POINTS %> Punkte. „Noch offen“ = noch keine Wertung.</p>
+</div>
+
+<div class="card">
+  <h3>Neuen Account anlegen</h3>
+  <form method="post" action="/admin/users" class="stack">
+    <input class="text" type="text" name="username" placeholder="Benutzername" autocapitalize="none" autocomplete="off" required>
+    <input class="text" type="text" name="password" placeholder="Start-Passwort (min. 6 Zeichen)" autocomplete="off" required minlength="6">
+    <label class="check"><input type="checkbox" name="is_admin" value="1"> Admin-Rechte</label>
+    <button class="btn" type="submit">Account anlegen</button>
+  </form>
+  <p class="muted small">Gib das Start-Passwort persönlich weiter – ändern kann es jeder selbst unter „Konto“.</p>
+</div>
+
+<h2 class="datehead">Nutzer (<%= users.length %>)</h2>
+<% users.forEach(u => { %>
+  <div class="card user-card">
+    <div class="user-row">
+      <span class="uname"><%= u.username %> <%= u.is_admin ? '⚙️' : '' %></span>
+      <span class="muted small"><%= u.stats.total %> Pkt. · <%= u.stats.tips %> Tipps</span>
+    </div>
+    <div class="user-actions">
+      <form method="post" action="/admin/users/<%= u.id %>/passwort" class="inline">
+        <input class="text small" type="text" name="password" placeholder="Neues Passwort" minlength="6" required>
+        <button class="btn sec small" type="submit">Zurücksetzen</button>
+      </form>
+      <% if (u.id !== user.id) { %>
+        <form method="post" action="/admin/users/<%= u.id %>/loeschen" class="inline confirm"
+              data-msg="Account „<%= u.username %>“ und alle Tipps wirklich löschen?">
+          <button class="btn danger small" type="submit">Löschen</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+<% }) %>
+
+<%- include('partials/foot') %>

@@ -1,0 +1,21 @@
+<%- include('partials/head') %>
+
+<div class="login-card">
+  <div class="login-logo">⚽</div>
+  <h1>WM 2026 Tippspiel</h1>
+  <p class="muted">11. Juni – 19. Juli 2026 · USA, Kanada &amp; Mexiko</p>
+
+  <% if (error) { %><div class="banner err"><%= error %></div><% } %>
+
+  <form method="post" action="/login" class="stack">
+    <input class="text" type="text" name="username" placeholder="Benutzername"
+           autocomplete="username" autocapitalize="none" autofocus required>
+    <input class="text" type="password" name="password" placeholder="Passwort"
+           autocomplete="current-password" required>
+    <button class="btn block" type="submit">Anmelden</button>
+  </form>
+
+  <p class="muted small">Kein Account? Frag den Spielleiter – nur er kann Accounts anlegen.</p>
+</div>
+
+<%- include('partials/foot') %>

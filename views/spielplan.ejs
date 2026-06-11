@@ -1,0 +1,78 @@
+<%- include('partials/head') %>
+
+<header class="top">
+  <div class="toprow">
+    <h1 class="logo">🗓️ Spielplan</h1>
+  </div>
+  <div class="chips">
+    <button class="chip <%= defaultTab === 'gruppen' ? 'on' : '' %>" data-plan="gruppen">Gruppenphase</button>
+    <button class="chip <%= defaultTab === 'ko' ? 'on' : '' %>" data-plan="ko">K.o.-Runde</button>
+  </div>
+</header>
+
+<section id="plan-gruppen" <%- defaultTab === 'gruppen' ? '' : 'hidden' %>>
+  <p class="muted small">Platz 1 + 2 jeder Gruppe sowie die acht besten Dritten erreichen das Sechzehntelfinale. Tabellen zählen Live-Stände mit.</p>
+  <% groups.forEach(g => { %>
+    <div class="card groupcard">
+      <h3>Gruppe <%= g.key %></h3>
+      <table class="standings">
+        <thead>
+          <tr><th class="num">#</th><th>Team</th><th class="num">Sp.</th><th class="num">Tore</th><th class="num">Pkt.</th></tr>
+        </thead>
+        <tbody>
+          <% g.standings.forEach((t, i) => { %>
+            <tr class="<%= i < 2 ? 'qualify' : '' %>">
+              <td class="num"><%= i + 1 %></td>
+              <td><span class="flag sm"><%= t.flag || '·' %></span> <%= t.name %></td>
+              <td class="num"><%= t.sp %></td>
+              <td class="num"><%= t.gf %>:<%= t.ga %></td>
+              <td class="num total"><%= t.pkt %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <div class="fixlist">
+        <% g.matches.forEach(m => { %>
+          <a class="fixrow" href="/spiel/<%= m.id %>">
+            <span class="fixwhen muted small">
+              <%= m.dayShort %> · <%= m.time %> Uhr
+              <% if (m.live) { %> <span class="livechip">● LIVE</span><% } %>
+            </span>
+            <span class="fixteams">
+              <span class="ft home"><span class="ftname"><%= m.home.name %></span> <span class="flag sm"><%= m.home.flag || '·' %></span></span>
+              <span class="fixscore <%= m.live ? 'islive' : '' %> <%= m.hasResult ? 'fin' : '' %>"><%= m.hasResult ? `${m.final ? m.final.h : m.hs}:${m.final ? m.final.a : m.as}` : '–:–' %></span>
+              <span class="ft away"><span class="flag sm"><%= m.away.flag || '·' %></span> <span class="ftname"><%= m.away.name %></span></span>
+            </span>
+          </a>
+        <% }) %>
+      </div>
+    </div>
+  <% }) %>
+</section>
+
+<section id="plan-ko" <%- defaultTab === 'ko' ? '' : 'hidden' %>>
+  <% koRounds.forEach(r => { %>
+    <h2 class="datehead"><%= r.label %></h2>
+    <div class="card fixcard">
+      <div class="fixlist">
+        <% r.matches.forEach(m => { %>
+          <a class="fixrow" href="/spiel/<%= m.id %>">
+            <span class="fixwhen muted small">
+              <%= m.dayShort %> · <%= m.time %> Uhr
+              <% if (m.live) { %> <span class="livechip">● LIVE</span><% } %>
+              <% if (m.final) { %> · 90 Min.: <%= m.hs %>:<%= m.as %><% } %>
+              <% if (m.note) { %> · <%= m.note %><% } %>
+            </span>
+            <span class="fixteams">
+              <span class="ft home"><span class="ftname <%= m.home.tbd ? 'tbd' : '' %>"><%= m.home.name %></span> <span class="flag sm"><%= m.home.flag || '·' %></span></span>
+              <span class="fixscore <%= m.live ? 'islive' : '' %> <%= m.hasResult ? 'fin' : '' %>"><%= m.hasResult ? `${m.final ? m.final.h : m.hs}:${m.final ? m.final.a : m.as}` : '–:–' %></span>
+              <span class="ft away"><span class="flag sm"><%= m.away.flag || '·' %></span> <span class="ftname <%= m.away.tbd ? 'tbd' : '' %>"><%= m.away.name %></span></span>
+            </span>
+          </a>
+        <% }) %>
+      </div>
+    </div>
+  <% }) %>
+</section>
+
+<%- include('partials/foot') %>

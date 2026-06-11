@@ -1,0 +1,20 @@
+{
+  "name": "wm-2026-tippspiel",
+  "version": "1.0.0",
+  "description": "Tippspiel zur Fußball-WM 2026",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^12.2.0",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2"
+  }
+}

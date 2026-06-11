@@ -1,0 +1,91 @@
+<%- include('partials/head') %>
+
+<header class="top">
+  <div class="toprow">
+    <h1 class="logo">🏆 Tabelle</h1>
+  </div>
+</header>
+
+<% if (anyLive) { %>
+  <div class="banner info"><span class="livechip">● LIVE</span> Es laufen gerade Spiele – die Punkte enthalten Live-Stände und aktualisieren sich automatisch.</div>
+<% } %>
+
+<div class="card">
+  <table class="board">
+    <thead>
+      <tr>
+        <th class="num">#</th>
+        <th>Name</th>
+        <th class="num">Pkt.</th>
+        <th class="num" title="Bonuspunkte">⭐</th>
+        <th class="num" title="Exakte Ergebnisse">🎯</th>
+        <th class="num" title="Richtige Tordifferenz">↔</th>
+        <th class="num" title="Richtige Tendenz">↗</th>
+        <th class="num" title="Abgegebene Tipps">Tipps</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% board.forEach((r, i) => { %>
+        <tr class="<%= r.id === user.id ? 'me' : '' %>">
+          <td class="num"><%= i + 1 %></td>
+          <td><%= r.username %></td>
+          <td class="num total"><%= r.total %></td>
+          <td class="num"><%= r.bonus %></td>
+          <td class="num"><%= r.c4 %></td>
+          <td class="num"><%= r.c3 %></td>
+          <td class="num"><%= r.c2 %></td>
+          <td class="num muted"><%= r.tips %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<% if (bonusLocked && bonusTips.length) { %>
+  <h2 class="datehead">⭐ Bonustipps</h2>
+  <div class="card">
+    <table class="bonus-table">
+      <thead>
+        <tr><th>Name</th><th>Weltmeister</th><th>🇩🇪 bis</th></tr>
+      </thead>
+      <tbody>
+        <% bonusTips.forEach(b => { %>
+          <tr class="<%= b.mine ? 'me' : '' %>">
+            <td><%= b.username %></td>
+            <td>
+              <% if (b.champion) { %>
+                <%= teamFlag(b.champion) %> <%= teamName(b.champion) %>
+                <% if (b.championHit === true) { %><span class="badge p4">+<%= BONUS_POINTS %></span><% } %>
+                <% if (b.championHit === false) { %><span class="badge p0">+0</span><% } %>
+              <% } else { %><span class="muted">–</span><% } %>
+            </td>
+            <td>
+              <% if (b.round) { %>
+                <%= BONUS_ROUNDS_SHORT[b.round] %>
+                <% if (b.roundHit === true) { %><span class="badge p4">+<%= BONUS_POINTS %></span><% } %>
+                <% if (b.roundHit === false) { %><span class="badge p0">+0</span><% } %>
+              <% } else { %><span class="muted">–</span><% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% if (!bonusResults.champion && !bonusResults.germanyRound) { %>
+      <p class="muted small">Ausgewertet wird nach dem Turnier – je richtigem Bonustipp gibt es <%= BONUS_POINTS %> Punkte.</p>
+    <% } %>
+  </div>
+<% } %>
+
+<div class="card legend">
+  <h3>Punktevergabe</h3>
+  <ul>
+    <li><span class="badge p4">+4</span> Exaktes Ergebnis</li>
+    <li><span class="badge p3">+3</span> Richtige Tordifferenz bei Sieg</li>
+    <li><span class="badge p2">+2</span> Richtige Tendenz (auch Unentschieden)</li>
+    <li><span class="badge p0">+0</span> Daneben</li>
+    <li><span class="badge p4">+<%= BONUS_POINTS %></span> je richtigem Bonustipp (Weltmeister, Deutschland-Runde)</li>
+  </ul>
+  <p class="muted small">Gewertet wird das Ergebnis nach 90 Minuten (+ Nachspielzeit), in der K.o.-Runde also ggf. ein Unentschieden.</p>
+</div>
+
+<%- include('partials/foot') %>

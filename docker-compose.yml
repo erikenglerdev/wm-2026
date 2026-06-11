@@ -1,0 +1,27 @@
+services:
+  tippspiel:
+    # Fertiges Image aus dem GitHub-Actions-Build (Update: docker compose pull && docker compose up -d)
+    image: ghcr.io/erikenglerdev/wm-2026:latest
+    # Alternativ lokal bauen: Zeile oben auskommentieren und stattdessen:
+    # build: .
+    restart: unless-stopped
+    # Nur lokal binden – nginx auf demselben Host macht SSL und proxyt hierhin.
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - tippspiel-data:/data
+    environment:
+      # Beim ersten Start wird damit der Admin-Account angelegt.
+      # Ohne ADMIN_PASSWORD wird ein Zufallspasswort generiert und geloggt
+      # (docker compose logs tippspiel).
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      # Anzeige-Zeitzone für Anstoßzeiten
+      TZ_DISPLAY: Europe/Berlin
+      # Ergebnisse/K.o.-Teams automatisch alle N Stunden aus dem Feed holen (0 = aus)
+      AUTO_SYNC_HOURS: 6
+      # Während laufender Spiele alle N Minuten syncen -> Live-Scoring (0 = aus)
+      LIVE_SYNC_MINUTES: 2
+
+volumes:
+  tippspiel-data:

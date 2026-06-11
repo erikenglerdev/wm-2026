@@ -1,0 +1,13 @@
+</div>
+<% if (user) { %>
+<nav class="bottom">
+  <a href="/" class="<%= active === 'tippen' ? 'on' : '' %>"><span class="ico">⚽</span>Tippen</a>
+  <a href="/spielplan" class="<%= active === 'spielplan' ? 'on' : '' %>"><span class="ico">🗓️</span>Spielplan</a>
+  <a href="/tabelle" class="<%= active === 'tabelle' ? 'on' : '' %>"><span class="ico">🏆</span>Tabelle</a>
+  <a href="/konto" class="<%= active === 'konto' ? 'on' : '' %>"><span class="ico">👤</span>Konto</a>
+  <% if (user.isAdmin) { %><a href="/admin" class="<%= active === 'admin' ? 'on' : '' %>"><span class="ico">⚙️</span>Admin</a><% } %>
+</nav>
+<% } %>
+<script src="/app.js?v=<%= assetV %>"></script>
+</body>
+</html>
