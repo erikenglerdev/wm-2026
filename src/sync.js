@@ -1,6 +1,7 @@
 'use strict';
 
 const { db, feedDateToIso } = require('./db');
+const { notifyChange } = require('./live');
 
 const FEED_URL = process.env.FEED_URL || 'https://fixturedownload.com/feed/json/fifa-world-cup-2026';
 
@@ -54,6 +55,7 @@ async function syncFromFeed() {
       }
     }
   })();
+  if (metaUpdated || scoresUpdated) notifyChange();
   return { total: data.length, metaUpdated, scoresUpdated };
 }
 

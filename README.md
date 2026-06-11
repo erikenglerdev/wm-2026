@@ -8,9 +8,12 @@ Node.js + Express + SQLite, serverseitig gerendert, ohne externe Frontend-Framew
 - **Alle 104 Spiele** mit echtem Spielplan (Quelle: fixturedownload.com), Anzeige in deutscher Zeit (Europe/Berlin)
 - **Tippen bis zum Anpfiff** – danach ist der Tipp serverseitig gesperrt
 - **Automatisches Speichern** beim Eintippen (kein Speichern-Button nötig)
-- **Live-Scoring:** Während laufender Spiele werden Zwischenstände regelmäßig aus dem Feed
-  geholt (`LIVE_SYNC_MINUTES`); Spielkarten, Spielplan und Rangliste aktualisieren sich
-  automatisch im Browser – die Punkte rechnen Live-Stände mit
+- **Live-Scoring (Push):** Der Server pusht jede Datenänderung per Server-Sent Events
+  sofort an alle offenen Browser – Tore, Tippsperren, Ergebnisse erscheinen ohne Neuladen
+  in ~1 Sekunde. Beim Zurückwechseln in die App (Mobile) wird sofort aktualisiert,
+  bei getrennter Verbindung greift ein Polling-Fallback. Zwischenstände kommen während
+  laufender Spiele minütlich aus dem Feed (`LIVE_SYNC_MINUTES`) oder sofort, wenn der
+  Admin sie einträgt – die Punkte rechnen Live-Stände mit
 - **Ergebnis-Anzeige:** Auf jeder Spielkarte sieht man eigenen Tipp, Ergebnis und Punkte;
   bei K.o.-Spielen zusätzlich 90-Minuten-Ergebnis und Endstand (n.V./i.E.) – gewertet wird
   immer das 90-Minuten-Ergebnis
@@ -92,6 +95,11 @@ server {
 Wichtig: `X-Forwarded-Proto` muss gesetzt sein – nur dann markiert die App ihr
 Session-Cookie als `Secure` (sie steht mit `trust proxy` hinter genau einem Proxy).
 
+Die Live-Updates laufen über Server-Sent Events (`/api/live`). Das funktioniert mit der
+obigen nginx-Konfiguration ohne Extras: Die App sendet `X-Accel-Buffering: no`
+(deaktiviert nginx-Pufferung für diesen Endpunkt) und alle 25 s einen Ping, damit die
+Verbindung Proxy-Timeouts übersteht.
+
 ### Updates einspielen
 
 ```bash
@@ -115,7 +123,7 @@ docker compose cp tippspiel:/data/tippspiel.db ./backup-$(date +%F).db
 | `ADMIN_PASSWORD`  | _(generiert)_                            | Passwort des initialen Admins (nur erster Start)     |
 | `TZ_DISPLAY`      | `Europe/Berlin`                          | Zeitzone für die Anzeige der Anstoßzeiten            |
 | `AUTO_SYNC_HOURS` | `0` (Compose: `6`)                       | Ergebnis-Sync-Intervall in Stunden, `0` = aus        |
-| `LIVE_SYNC_MINUTES` | `0` (Compose: `2`)                     | Sync-Intervall in Minuten während laufender Spiele   |
+| `LIVE_SYNC_MINUTES` | `0` (Compose: `1`)                     | Sync-Intervall in Minuten während laufender Spiele   |
 | `FEED_URL`        | fixturedownload.com (WM 2026)            | Quelle für Spielplan-/Ergebnis-Sync                  |
 
 ## Ablauf für den Spielleiter

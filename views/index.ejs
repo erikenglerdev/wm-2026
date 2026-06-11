@@ -73,7 +73,10 @@
              data-state="<%= m.hasResult && !m.live ? 'finished' : (m.locked ? 'locked' : 'open') %>"
              data-today="<%= m.today ? 1 : 0 %>"
              data-tomorrow="<%= m.tomorrow ? 1 : 0 %>"
-             data-tipped="<%= m.tip ? 1 : 0 %>">
+             data-tipped="<%= m.tip ? 1 : 0 %>"
+             data-hasres="<%= m.hasResult ? 1 : 0 %>"
+             data-tip-h="<%= m.tip ? m.tip.home_goals : '' %>"
+             data-tip-a="<%= m.tip ? m.tip.away_goals : '' %>">
       <div class="mhead">
         <span><%= m.stage %></span>
         <span>

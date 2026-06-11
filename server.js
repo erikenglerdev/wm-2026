@@ -13,6 +13,7 @@ const {
   stageLabel, roundLabel, BONUS_ROUNDS, BONUS_ROUNDS_SHORT,
 } = require('./src/format');
 const { syncFromFeed, startAutoSync, FEED_URL } = require('./src/sync');
+const { bus, notifyChange } = require('./src/live');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -223,9 +224,9 @@ app.post('/api/bonus', auth.requireLoginApi, (req, res) => {
   res.json({ ok: true });
 });
 
-// ---------- Live-Scores (Polling) ----------
+// ---------- Live-Scores (SSE-Push + Abruf) ----------
 
-app.get('/api/scores', auth.requireLoginApi, (req, res) => {
+function scoresPayload() {
   const ms = qMatches.all().map(m => ({
     id: m.id,
     l: isLocked(m) ? 1 : 0,
@@ -235,8 +236,32 @@ app.get('/api/scores', auth.requireLoginApi, (req, res) => {
     n: m.result_note || null,
   }));
   const r = bonusResults();
+  return { live: ms.some(x => x.s === 'live'), bl: bonusLocked() ? 1 : 0, champ: r.champion, ger: r.germanyRound, m: ms };
+}
+
+app.get('/api/scores', auth.requireLoginApi, (req, res) => {
   res.set('Cache-Control', 'no-store');
-  res.json({ live: ms.some(x => x.s === 'live'), bl: bonusLocked() ? 1 : 0, champ: r.champion, ger: r.germanyRound, m: ms });
+  res.json(scoresPayload());
+});
+
+// Server-Sent Events: pusht bei jeder Datenänderung sofort den neuen Stand
+app.get('/api/live', auth.requireLoginApi, (req, res) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-store',
+    'X-Accel-Buffering': 'no', // nginx: Antwort nicht puffern
+  });
+  res.flushHeaders();
+  res.write('retry: 5000\n\n');
+
+  const send = () => { res.write(`data: ${JSON.stringify(scoresPayload())}\n\n`); };
+  send();
+
+  const onUpdate = () => { try { send(); } catch (e) { /* Verbindung weg */ } };
+  bus.on('update', onUpdate);
+  // Ping hält die Verbindung durch Proxys (nginx) hinweg offen
+  const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch (e) {} }, 25000);
+  req.on('close', () => { clearInterval(ping); bus.off('update', onUpdate); });
 });
 
 // ---------- Spiel-Detail: alle Tipps ----------
@@ -443,6 +468,7 @@ app.post('/admin/bonus', auth.requireAdmin, (req, res) => {
   }
   setSetting('champion_result', champion);
   setSetting('germany_round_result', round);
+  notifyChange();
   res.redirect('/admin?ok=' + encodeURIComponent('Bonustipp-Auswertung gespeichert.'));
 });
 
@@ -505,6 +531,7 @@ app.post('/admin/spiele/:id', auth.requireAdmin, (req, res) => {
                        home_final = ?, away_final = ?, result_note = ?, status = ?
     WHERE id = ?
   `).run(homeTeam, awayTeam, score.h, score.a, finalScore.h, finalScore.a, note, status, m.id);
+  notifyChange();
   back(`Spiel #${m.id} gespeichert.`);
 });
 
@@ -518,6 +545,22 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).send('Interner Fehler');
 });
+
+// Anpfiff-Wächter: Wenn ein Spiel beginnt (oder die Bonustipp-Sperre greift),
+// ändert sich der Sperr-Zustand ohne DB-Schreibvorgang – per Push verteilen.
+const lockSignature = () => {
+  const now = Date.now();
+  const locked = qMatches.all().reduce((n, m) => n + (now >= Date.parse(m.kickoff_utc) ? 1 : 0), 0);
+  return `${locked}:${bonusLocked() ? 1 : 0}`;
+};
+let lastLockSig = lockSignature();
+setInterval(() => {
+  const sig = lockSignature();
+  if (sig !== lastLockSig) {
+    lastLockSig = sig;
+    notifyChange();
+  }
+}, 30 * 1000).unref();
 
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => {
